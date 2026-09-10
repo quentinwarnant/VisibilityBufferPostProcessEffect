@@ -54,6 +54,21 @@ The renderer exposes individual G-buffer and V-buffer channels, signed deltas, c
 
 ![G-buffer and V-buffer debug overview](docs/GBuffer-VBuffer-Overview.png)
 
+The overview tiles are ordered left-to-right, top-to-bottom:
+
+| Row | Left | Center | Right |
+|---|---|---|---|
+| Top | Final deferred composite | Base albedo G-buffer | Encoded view-space normal/material |
+| Middle | Combined V-buffer data | Effect ID | Primitive ID |
+| Bottom | Logical flag UV | Reconstructed barycentrics | Signed effect delta |
+
+- **Combined V-buffer data** blends the selected effect color with UV, primitive, and barycentric variation.
+- **Effect ID** assigns a stable color to each compute effect.
+- **Primitive ID** hashes each rasterized triangle to a unique debug color.
+- **Logical UV** maps U and V to red and green.
+- **Barycentrics** maps the three triangle coordinates to RGB.
+- **Signed delta** is centered at gray: brighter values are positive contributions and darker values are negative contributions.
+
 ![GPU-classified 8x8 indirect dispatch tiles colored by effect ID](docs/indirect_arg_tiles.png)
 
 ## Build
