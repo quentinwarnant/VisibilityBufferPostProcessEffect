@@ -742,6 +742,7 @@ void Renderer::DrawUi()
     ImGui::Combo("Right sail effect", &m_effectParameters.sailIds[1], effectIds, IM_ARRAYSIZE(effectIds));
     ImGui::SliderFloat3("Effect direction (view)", &m_effectParameters.direction.x, -1.0f, 1.0f);
     ImGui::SliderFloat("Signed strength", &m_effectParameters.signedStrength, -3.0f, 3.0f);
+    ImGui::TextUnformatted("Warp reaches full replacement at |strength| = 1");
     ImGui::TextUnformatted("8x8 tiles, GPU indirect dispatch; no CPU readback");
     const char* modes[] = {
         "Final composite",

@@ -577,8 +577,11 @@ void WarpDistortionCS(
 
     float3 originalAlbedo = computeAlbedo.Load(int3(pixel, 0)).rgb;
     float3 warpedAlbedo = computeAlbedo.Load(int3(sourcePixel, 0)).rgb;
-    float replacementAmount = saturate(abs(effectDirectionStrength.w) / 3.0);
-    float3 replacementDelta = (warpedAlbedo - originalAlbedo) * replacementAmount;
+    float3 normalV = normalize(computeNormalMaterial.Load(int3(pixel, 0)).xyz * 2.0 - 1.0);
+    float diffuse = 0.25 + 0.75 * saturate(dot(
+        normalV, normalize(float3(-0.35, 0.65, -0.7))));
+    float replacementAmount = saturate(abs(effectDirectionStrength.w));
+    float3 replacementDelta = (warpedAlbedo - originalAlbedo) * diffuse * replacementAmount;
     outputDelta[pixel] = float4(replacementDelta, length(displacement) / 24.0);
 }
 )";

@@ -55,7 +55,7 @@ private:
     {
         int sailIds[2]{1, 2};
         DirectX::XMFLOAT3 direction{-0.35f, 0.65f, -0.7f};
-        float signedStrength = 3.0f;
+        float signedStrength = 1.0f;
     };
 
     void CreateDeviceResources(HWND window);
