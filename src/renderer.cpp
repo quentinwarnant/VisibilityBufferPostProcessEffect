@@ -30,7 +30,7 @@ constexpr uint32_t SrvDepth = 5;
 constexpr uint32_t SrvSignedDelta = 6;
 constexpr uint32_t UavEffectBase = 7;
 constexpr uint32_t UavEffectStride = 3;
-constexpr uint32_t EffectCount = 3;
+constexpr uint32_t EffectCount = 4;
 constexpr uint32_t TileSize = 8;
 constexpr DXGI_FORMAT ColorFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
 constexpr DXGI_FORMAT IntermediateFormat = DXGI_FORMAT_R16G16B16A16_FLOAT;
@@ -319,11 +319,13 @@ void Renderer::CreatePipelineResources()
     const std::array<ComPtr<ID3DBlob>, EffectCount> classifyShaders{
         Compile("ClassifyIridescentTiles", "cs_5_1"),
         Compile("ClassifyFrostTiles", "cs_5_1"),
-        Compile("ClassifyLightningTiles", "cs_5_1")};
+        Compile("ClassifyLightningTiles", "cs_5_1"),
+        Compile("ClassifyWarpTiles", "cs_5_1")};
     const std::array<ComPtr<ID3DBlob>, EffectCount> effectShaders{
         Compile("IridescentWindSheenCS", "cs_5_1"),
         Compile("FrostCrystalCS", "cs_5_1"),
-        Compile("StormLightningCS", "cs_5_1")};
+        Compile("StormLightningCS", "cs_5_1"),
+        Compile("WarpDistortionCS", "cs_5_1")};
     const std::array<D3D12_INPUT_ELEMENT_DESC, 3> layout{{
         {"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(Vertex, position), D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
         {"NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(Vertex, normal), D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
@@ -734,7 +736,8 @@ void Renderer::DrawUi()
         "0 - None",
         "1 - Iridescent wind sheen",
         "2 - Frost crystal",
-        "3 - Storm lightning"};
+        "3 - Storm lightning",
+        "4 - Smiley warp distortion"};
     ImGui::Combo("Left sail effect", &m_effectParameters.sailIds[0], effectIds, IM_ARRAYSIZE(effectIds));
     ImGui::Combo("Right sail effect", &m_effectParameters.sailIds[1], effectIds, IM_ARRAYSIZE(effectIds));
     ImGui::SliderFloat3("Effect direction (view)", &m_effectParameters.direction.x, -1.0f, 1.0f);

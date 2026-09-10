@@ -16,6 +16,7 @@ The sample keeps material rasterization independent from special effects: the sa
 - GPU-built 8x8 tile lists with no CPU readback
 - Separate compute PSO and indirect dispatch for each effect
 - Iridescent wind, frost crystal, and storm-lightning effects
+- Smiley warp distortion that replaces base samples through signed G-buffer deltas
 - Procedural cloth texture and smiley design with no runtime assets
 - Debug views for every G-buffer and V-buffer channel
 - Self-contained embedded HLSL and pinned Dear ImGui dependency
@@ -45,6 +46,7 @@ All HLSL is embedded in `src/shaders.h` and compiled with `D3DCompile` at shader
    - **1 - Iridescent wind sheen:** `IridescentWindSheenCS` combines view-normal/direction facing, logical UV, wind, and time into moving cyan/magenta/gold bands with both positive highlights and negative cloth-color variation.
    - **2 - Frost crystal:** `FrostCrystalCS` advances an animated noisy crystallization front through logical UV, using decoded barycentric triangle edges and billow-normal response for icy buildup, bright facets, and dark gaps.
    - **3 - Storm lightning:** `StormLightningCS` seeds animated branching bolts from logical UV, primitive ID, and barycentrics, producing a blue-white core, triangle veins, and a dark signed halo.
+   - **4 - Smiley warp distortion:** `WarpDistortionCS` computes animated screen-space displacement from logical sail UV and wind, samples the displaced base albedo, and writes `warped - original` into the signed-delta target. Deferred composition therefore reconstructs the warped cloth and smiley instead of layering a tint over them.
    - Output is a separate `R16G16B16A16_FLOAT` signed-delta UAV. It never modifies the G-buffer in place and never multiplies effect logic into the base material shader.
    - The delta target is cleared once. Effect IDs are exclusive per pixel, and every shader validates its ID before writing, so the separate dispatches cannot race. The base cloth and smiley remain visible beneath all effects.
 
@@ -61,7 +63,7 @@ Each sail writes its independently selected effect ID:
 
 | Component | Encoding |
 |---|---|
-| X | Effect ID (`0` none, `1` iridescent sheen, `2` frost crystal, `3` storm lightning) |
+| X | Effect ID (`0` none, `1` iridescent sheen, `2` frost crystal, `3` storm lightning, `4` smiley warp) |
 | Y | `SV_PrimitiveID + 1` (`0` remains the cleared/background sentinel) |
 | Z | Sail parameter UV packed as two IEEE-754 half values |
 | W | First two barycentric coordinates packed as two UNORM16 values; the third is `1 - x - y` |

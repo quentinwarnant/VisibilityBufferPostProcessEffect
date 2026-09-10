@@ -6,6 +6,7 @@ inline constexpr const char* kShaderSource = R"(
 #define EFFECT_IRIDESCENT 1
 #define EFFECT_FROST 2
 #define EFFECT_LIGHTNING 3
+#define EFFECT_WARP 4
 
 struct VertexIn
 {
@@ -226,6 +227,7 @@ float4 RenderDeferredView(uint viewMode, uint2 pixel)
         if (effectsData.x == EFFECT_IRIDESCENT) idColor = float3(0.0, 0.9, 1.0);
         if (effectsData.x == EFFECT_FROST) idColor = float3(0.65, 0.85, 1.0);
         if (effectsData.x == EFFECT_LIGHTNING) idColor = float3(0.2, 0.35, 1.0);
+        if (effectsData.x == EFFECT_WARP) idColor = float3(1.0, 0.28, 0.78);
 
         if (viewMode == 4u)
             return float4(idColor, 1.0);
@@ -264,6 +266,8 @@ float3 DispatchEffectColor(uint effect)
         return float3(0.65, 0.85, 1.0);
     if (effect == EFFECT_LIGHTNING)
         return float3(0.2, 0.35, 1.0);
+    if (effect == EFFECT_WARP)
+        return float3(1.0, 0.28, 0.78);
     return 0.0;
 }
 
@@ -280,7 +284,7 @@ float4 RenderDispatchTiles(uint2 pixel, uint2 dimensions)
         {
             uint2 samplePixel = min(tileOrigin + uint2(x, y), dimensions - 1u);
             uint effect = effectsVBufferTexture.Load(int3(samplePixel, 0)).x;
-            if (effect > EFFECT_NONE && effect <= EFFECT_LIGHTNING)
+            if (effect > EFFECT_NONE && effect <= EFFECT_WARP)
                 effectMask |= 1u << effect;
         }
     }
@@ -288,7 +292,7 @@ float4 RenderDispatchTiles(uint2 pixel, uint2 dimensions)
     float3 tileColor = 0.0;
     float effectCount = 0.0;
     [unroll]
-    for (uint effect = EFFECT_IRIDESCENT; effect <= EFFECT_LIGHTNING; ++effect)
+    for (uint effect = EFFECT_IRIDESCENT; effect <= EFFECT_WARP; ++effect)
     {
         if ((effectMask & (1u << effect)) != 0u)
         {
@@ -388,6 +392,15 @@ void ClassifyLightningTiles(
     uint3 groupId : SV_GroupID)
 {
     ClassifyEffectTile(EFFECT_LIGHTNING, dispatchThreadId, groupThreadId, groupId);
+}
+
+[numthreads(TILE_SIZE, TILE_SIZE, 1)]
+void ClassifyWarpTiles(
+    uint3 dispatchThreadId : SV_DispatchThreadID,
+    uint3 groupThreadId : SV_GroupThreadID,
+    uint3 groupId : SV_GroupID)
+{
+    ClassifyEffectTile(EFFECT_WARP, dispatchThreadId, groupThreadId, groupId);
 }
 
 [numthreads(1, 1, 1)]
@@ -534,5 +547,38 @@ void StormLightningCS(
     float3 brightCore = float3(0.58, 0.82, 1.0) * core * (0.75 + 0.65 * pulse);
     float3 darkHalo = albedo * max(halo - core, 0.0) * 0.48;
     outputDelta[pixel] = float4((brightCore - darkHalo) * scale, max(core, halo));
+}
+
+[numthreads(TILE_SIZE, TILE_SIZE, 1)]
+void WarpDistortionCS(
+    uint3 groupThreadId : SV_GroupThreadID,
+    uint3 groupId : SV_GroupID)
+{
+    uint2 pixel;
+    uint4 effectsData;
+    if (!ResolveEffectPixel(groupThreadId, groupId, EFFECT_WARP, pixel, effectsData))
+        return;
+
+    float2 uv = DecodeSailUv(effectsData.z);
+    float time = cameraTime.w;
+    float horizontalWave = sin(uv.y * 24.0 - time * (3.2 + wind.z * 4.0))
+                         + 0.45 * sin(uv.y * 51.0 + uv.x * 9.0 + time * 2.1);
+    float verticalWave = sin(uv.x * 18.0 + uv.y * 7.0 + time * 2.7);
+    float edgeFade = smoothstep(0.0, 0.08, uv.x) * smoothstep(0.0, 0.08, 1.0 - uv.x)
+                   * smoothstep(0.0, 0.08, uv.y) * smoothstep(0.0, 0.08, 1.0 - uv.y);
+    float2 displacement = float2(horizontalWave * 20.0, verticalWave * 7.0)
+                        * (0.45 + wind.z * 0.75) * edgeFade;
+
+    int2 dimensions = int2((uint)viewportDelta.x, (uint)viewportDelta.y);
+    int2 sourcePixel = clamp(int2(pixel) + int2(round(displacement)), int2(0, 0), dimensions - 1);
+    uint4 sourceEffects = computeEffects.Load(int3(sourcePixel, 0));
+    if (sourceEffects.x != EFFECT_WARP)
+        sourcePixel = int2(pixel);
+
+    float3 originalAlbedo = computeAlbedo.Load(int3(pixel, 0)).rgb;
+    float3 warpedAlbedo = computeAlbedo.Load(int3(sourcePixel, 0)).rgb;
+    float replacementAmount = saturate(abs(effectDirectionStrength.w) / 3.0);
+    float3 replacementDelta = (warpedAlbedo - originalAlbedo) * replacementAmount;
+    outputDelta[pixel] = float4(replacementDelta, length(displacement) / 24.0);
 }
 )";
