@@ -2,7 +2,7 @@
 
 A DirectX 12 deferred-rendering experiment with two GPU-animated sails, a compact effects V-buffer, tiled compute classification, and indirect per-effect dispatch.
 
-The sample keeps material rasterization independent from special effects: the sail pixel shader writes ordinary albedo and surface data, while later GPU passes classify visible effect IDs and apply signed additive changes to the G-buffer. Dear ImGui provides live wind, cloth, effect, and buffer-inspection controls.
+The sample keeps material rasterization independent from special effects: the sail pixel shader writes ordinary albedo and surface data, while later GPU passes classify visible effect IDs and emit signed deltas. Those deltas can be ordinary additive effects or difference values that produce an effective override of the original shaded result. Dear ImGui provides live wind, cloth, effect, and buffer-inspection controls.
 
 ![Two GPU-animated sails using frost crystal and iridescent wind effects, with the ImGui controls visible](docs/animated-sails.png)
 
@@ -15,6 +15,7 @@ The sample keeps material rasterization independent from special effects: the sa
 - Deferred albedo, normal/material, depth, and effects V-buffer outputs
 - GPU-built 8x8 tile lists with no CPU readback
 - Separate compute PSO and indirect dispatch for each effect
+- Additive and replacement-style effects through a shared signed-delta pipeline
 - Iridescent wind, frost crystal, and storm-lightning effects
 - Smiley warp distortion that replaces base samples through signed G-buffer deltas
 - Procedural cloth texture and smiley design with no runtime assets
@@ -39,8 +40,8 @@ All HLSL is embedded in `src/shaders.h` and compiled with `D3DCompile` at shader
    - Three classifier PSOs dispatch one 8x8 compute group per screen tile, one classifier for each supported nonzero effect ID.
    - A group-shared flag ensures each matching tile is appended once to that effect's own GPU `RWStructuredBuffer<uint>` tile list.
    - Each effect also owns a separate three-uint indirect argument buffer. An atomic increment writes dispatch X; `FinalizeIndirectArgs` sets Y and Z to one.
-   - All three counters are cleared every frame. UAV barriers order list/counter writes and argument finalization before each argument buffer transitions to `INDIRECT_ARGUMENT`.
-   - There is no CPU readback. Three `ExecuteIndirect` calls target three separate effect PSOs; effects with empty lists dispatch zero groups.
+   - All four counters are cleared every frame. UAV barriers order list/counter writes and argument finalization before each argument buffer transitions to `INDIRECT_ARGUMENT`.
+   - There is no CPU readback. Four `ExecuteIndirect` calls target four separate effect PSOs; effects with empty lists dispatch zero groups.
 
 3. **Effect compute**
    - **1 - Iridescent wind sheen:** `IridescentWindSheenCS` combines view-normal/direction facing, logical UV, wind, and time into moving cyan/magenta/gold bands with both positive highlights and negative cloth-color variation.
@@ -48,7 +49,20 @@ All HLSL is embedded in `src/shaders.h` and compiled with `D3DCompile` at shader
    - **3 - Storm lightning:** `StormLightningCS` seeds animated branching bolts from logical UV, primitive ID, and barycentrics, producing a blue-white core, triangle veins, and a dark signed halo.
    - **4 - Smiley warp distortion:** `WarpDistortionCS` computes animated screen-space displacement from logical sail UV and wind, samples the displaced base albedo, and writes `(warped - original) * deferred lighting` into the signed-delta target. At `|strength| = 1`, adding that delta to the ordinarily lit base cancels the original contribution exactly and reconstructs the warped cloth and smiley instead of layering a tint over them.
    - Output is a separate `R16G16B16A16_FLOAT` signed-delta UAV. It never modifies the G-buffer in place and never multiplies effect logic into the base material shader.
-   - The delta target is cleared once. Effect IDs are exclusive per pixel, and every shader validates its ID before writing, so the separate dispatches cannot race. The base cloth and smiley remain visible beneath all effects.
+   - The delta target is cleared once. Effect IDs are exclusive per pixel, and every shader validates its ID before writing, so the separate dispatches cannot race.
+
+### Effect composition semantics
+
+Every effect uses the same final operation:
+
+```text
+final shaded color = base shaded color + signed effect delta
+```
+
+- **Additive effects** write positive and/or negative artistic contributions. Iridescent wind, frost crystal, and storm lightning use this mode, so the original cloth remains part of the result.
+- **Replacement-style effects** write `desired result - base result`. The warp effect uses this mode; at full strength, adding the difference cancels the original smiley and replaces it with the displaced sample.
+
+The renderer therefore has one race-free signed-delta interface while allowing an effect to behave additively or as an effective override.
 
 4. **Deferred lighting/composition**
    - `CompositePS` reads albedo, normal/material, depth, effects data, and signed delta.
