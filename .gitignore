@@ -1,0 +1,22 @@
+# CMake and Visual Studio output
+/build/
+/out/
+/.vs/
+/CMakeUserPresets.json
+*.sln
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
+
+# Runtime and debugger files
+/imgui.ini
+*.log
+*.dmp
+
+# Editor and OS files
+.vscode/
+.idea/
+*.suo
+*.user
+Thumbs.db
+Desktop.ini
