@@ -680,7 +680,7 @@ void Renderer::Update()
     m_lastTick = now;
     if (!m_paused)
         m_time += m_deltaTime;
-    const XMMATRIX view = XMMatrixLookAtLH(XMVectorSet(10.5f, 1.2f, 15.5f, 1.0f),
+    const XMMATRIX view = XMMatrixLookAtLH(XMVectorSet(5.25f, 0.6f, 7.75f, 1.0f),
         XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f), XMVectorSet(0, 1, 0, 0));
     const XMMATRIX projection = XMMatrixPerspectiveFovLH(XMConvertToRadians(50.0f),
         static_cast<float>(m_width) / std::max(1u, m_height), 0.1f, 100.0f);
@@ -690,7 +690,7 @@ void Renderer::Update()
     XMStoreFloat4x4(&constants.projection, projection);
     XMStoreFloat4x4(&constants.viewProjection, viewProjection);
     XMStoreFloat4x4(&constants.inverseViewProjection, XMMatrixInverse(nullptr, viewProjection));
-    constants.cameraTime = {10.5f, 1.2f, 15.5f, m_time};
+    constants.cameraTime = {5.25f, 0.6f, 7.75f, m_time};
     constants.viewportDelta = {static_cast<float>(m_width), static_cast<float>(m_height), m_deltaTime, 0.0f};
     constants.wind = {std::cos(m_sailParameters.windAngle), std::sin(m_sailParameters.windAngle),
         m_sailParameters.windSpeed / 12.0f, m_sailParameters.gustAmount};
