@@ -4,6 +4,10 @@ A DirectX 12 deferred-rendering experiment with two GPU-animated sails, a compac
 
 The sample keeps material rasterization independent from special effects: the sail pixel shader writes ordinary albedo and surface data, while later GPU passes classify visible effect IDs and apply signed additive changes to the G-buffer. Dear ImGui provides live wind, cloth, effect, and buffer-inspection controls.
 
+![Two GPU-animated sails using frost crystal and iridescent wind effects, with the ImGui controls visible](docs/animated-sails.png)
+
+*Two independently assigned effects running through GPU-classified tile lists and indirect compute dispatch.*
+
 ## Highlights
 
 - GPU vertex-shader sail deformation with wind, gust, tension, billow, and sag controls
