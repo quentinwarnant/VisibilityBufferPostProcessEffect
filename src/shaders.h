@@ -202,20 +202,19 @@ FullscreenOut FullscreenVS(uint id : SV_VertexID)
     return output;
 }
 
-float4 CompositePS(FullscreenOut input) : SV_Target
+float4 RenderDeferredView(uint viewMode, uint2 pixel)
 {
-    uint2 pixel = min((uint2)input.position.xy, (uint2)viewportDelta.xy - 1u);
     float4 albedo = baseAlbedoTexture.Load(int3(pixel, 0));
     float4 normalMaterial = normalMaterialTexture.Load(int3(pixel, 0));
     uint4 effectsData = effectsVBufferTexture.Load(int3(pixel, 0));
     float depth = depthTexture.Load(int3(pixel, 0)).r;
     float4 delta = signedDeltaTexture.Load(int3(pixel, 0));
 
-    if (debugMode == 1u)
+    if (viewMode == 1u)
         return float4(albedo.rgb, 1.0);
-    if (debugMode == 2u)
+    if (viewMode == 2u)
         return float4(normalMaterial.rgb, 1.0);
-    if (debugMode >= 3u && debugMode <= 7u)
+    if (viewMode >= 3u && viewMode <= 7u)
     {
         float2 encodedUv = float2(f16tof32(effectsData.z & 0xffffu), f16tof32(effectsData.z >> 16));
         float2 bary = float2(effectsData.w & 0xffffu, effectsData.w >> 16) / 65535.0;
@@ -228,25 +227,25 @@ float4 CompositePS(FullscreenOut input) : SV_Target
         if (effectsData.x == EFFECT_FROST) idColor = float3(0.65, 0.85, 1.0);
         if (effectsData.x == EFFECT_LIGHTNING) idColor = float3(0.2, 0.35, 1.0);
 
-        if (debugMode == 4u)
+        if (viewMode == 4u)
             return float4(idColor, 1.0);
-        if (debugMode == 5u)
+        if (viewMode == 5u)
         {
             uint primitive = effectsData.y - 1u;
             float3 primitiveColor = frac(float3(0.1031, 0.11369, 0.13787) * (primitive + 1u));
             primitiveColor += dot(primitiveColor, primitiveColor.yzx + 19.19);
             return float4(frac((primitiveColor.xxy + primitiveColor.yzz) * primitiveColor.zyx), 1.0);
         }
-        if (debugMode == 6u)
+        if (viewMode == 6u)
             return float4(encodedUv, 0.0, 1.0);
-        if (debugMode == 7u)
+        if (viewMode == 7u)
             return float4(barycentrics, 1.0);
 
         float primitivePattern = ((effectsData.y - 1u) & 31u) / 31.0;
         return float4(idColor * (0.55 + 0.45 * bary.y) +
             0.18 * float3(frac(encodedUv.x + primitivePattern), encodedUv.y, 0.0), 1.0);
     }
-    if (debugMode == 8u)
+    if (viewMode == 8u)
         return float4(saturate(0.5 + delta.rgb), 1.0);
 
     if (depth >= 1.0)
@@ -255,6 +254,26 @@ float4 CompositePS(FullscreenOut input) : SV_Target
     float3 n = normalize(normalMaterial.xyz * 2.0 - 1.0);
     float diffuse = 0.25 + 0.75 * saturate(dot(n, normalize(float3(-0.35, 0.65, -0.7))));
     return float4(max(0.0, albedo.rgb * diffuse + delta.rgb), 1.0);
+}
+
+float4 CompositePS(FullscreenOut input) : SV_Target
+{
+    uint2 dimensions = (uint2)viewportDelta.xy;
+    if (debugMode == 9u)
+    {
+        float2 gridPosition = saturate(input.uv) * 3.0;
+        uint2 gridCell = min((uint2)gridPosition, 2u);
+        float2 paneUv = frac(gridPosition);
+        uint paneMode = gridCell.y * 3u + gridCell.x;
+        uint2 sourcePixel = min((uint2)(paneUv * viewportDelta.xy), dimensions - 1u);
+        float4 color = RenderDeferredView(paneMode, sourcePixel);
+        float border = step(paneUv.x, 0.008) + step(paneUv.y, 0.008)
+                     + step(0.992, paneUv.x) + step(0.992, paneUv.y);
+        return lerp(color, float4(0.85, 0.9, 1.0, 1.0), saturate(border));
+    }
+
+    uint2 pixel = min((uint2)input.position.xy, dimensions - 1u);
+    return RenderDeferredView(debugMode, pixel);
 }
 
 )" R"(

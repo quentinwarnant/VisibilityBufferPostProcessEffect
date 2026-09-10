@@ -81,6 +81,11 @@ The UI preserves all wind, gust, billow, tension, relaxation, sag, pause, reset,
 - Effects V-buffer logical UV
 - Effects V-buffer barycentrics
 - Signed delta (zero-centered at gray)
+- Debug overview (3x3 grid containing all views above)
+
+![Debug overview showing the final composite, G-buffer targets, effects V-buffer channels, and signed effect delta](docs/GBuffer-VBuffer-Overview.png)
+
+*The **Debug overview** mode displays the final image and every deferred/V-buffer diagnostic in a single 3x3 grid.*
 
 ## Build
 

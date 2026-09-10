@@ -749,7 +749,8 @@ void Renderer::DrawUi()
         "V-buffer: primitive ID",
         "V-buffer: logical UV",
         "V-buffer: barycentrics",
-        "Signed delta"};
+        "Signed delta",
+        "Debug overview"};
     ImGui::Combo("Debug view", &m_debugMode, modes, IM_ARRAYSIZE(modes));
     if (ImGui::Button(m_paused ? "Resume" : "Pause"))
         m_paused = !m_paused;
