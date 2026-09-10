@@ -750,7 +750,8 @@ void Renderer::DrawUi()
         "V-buffer: logical UV",
         "V-buffer: barycentrics",
         "Signed delta",
-        "Debug overview"};
+        "Debug overview",
+        "Dispatch tiles by effect ID"};
     ImGui::Combo("Debug view", &m_debugMode, modes, IM_ARRAYSIZE(modes));
     if (ImGui::Button(m_paused ? "Resume" : "Pause"))
         m_paused = !m_paused;

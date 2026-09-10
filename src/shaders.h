@@ -256,6 +256,55 @@ float4 RenderDeferredView(uint viewMode, uint2 pixel)
     return float4(max(0.0, albedo.rgb * diffuse + delta.rgb), 1.0);
 }
 
+float3 DispatchEffectColor(uint effect)
+{
+    if (effect == EFFECT_IRIDESCENT)
+        return float3(0.0, 0.9, 1.0);
+    if (effect == EFFECT_FROST)
+        return float3(0.65, 0.85, 1.0);
+    if (effect == EFFECT_LIGHTNING)
+        return float3(0.2, 0.35, 1.0);
+    return 0.0;
+}
+
+float4 RenderDispatchTiles(uint2 pixel, uint2 dimensions)
+{
+    uint2 tileOrigin = (pixel / TILE_SIZE) * TILE_SIZE;
+    uint effectMask = 0u;
+
+    [unroll]
+    for (uint y = 0u; y < TILE_SIZE; ++y)
+    {
+        [unroll]
+        for (uint x = 0u; x < TILE_SIZE; ++x)
+        {
+            uint2 samplePixel = min(tileOrigin + uint2(x, y), dimensions - 1u);
+            uint effect = effectsVBufferTexture.Load(int3(samplePixel, 0)).x;
+            if (effect > EFFECT_NONE && effect <= EFFECT_LIGHTNING)
+                effectMask |= 1u << effect;
+        }
+    }
+
+    float3 tileColor = 0.0;
+    float effectCount = 0.0;
+    [unroll]
+    for (uint effect = EFFECT_IRIDESCENT; effect <= EFFECT_LIGHTNING; ++effect)
+    {
+        if ((effectMask & (1u << effect)) != 0u)
+        {
+            tileColor += DispatchEffectColor(effect);
+            effectCount += 1.0;
+        }
+    }
+    tileColor = effectCount > 0.0 ? tileColor / effectCount : float3(0.018, 0.025, 0.035);
+
+    uint2 tilePixel = pixel % TILE_SIZE;
+    bool border = tilePixel.x == 0u || tilePixel.y == 0u
+               || tilePixel.x == TILE_SIZE - 1u || tilePixel.y == TILE_SIZE - 1u;
+    float3 borderColor = effectCount > 0.0 ? min(1.0, tileColor * 1.45 + 0.15) : float3(0.11, 0.14, 0.18);
+    return float4(border ? borderColor : tileColor, 1.0);
+}
+
 float4 CompositePS(FullscreenOut input) : SV_Target
 {
     uint2 dimensions = (uint2)viewportDelta.xy;
@@ -273,6 +322,8 @@ float4 CompositePS(FullscreenOut input) : SV_Target
     }
 
     uint2 pixel = min((uint2)input.position.xy, dimensions - 1u);
+    if (debugMode == 10u)
+        return RenderDispatchTiles(pixel, dimensions);
     return RenderDeferredView(debugMode, pixel);
 }
 

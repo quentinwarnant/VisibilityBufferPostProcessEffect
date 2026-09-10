@@ -82,10 +82,15 @@ The UI preserves all wind, gust, billow, tension, relaxation, sag, pause, reset,
 - Effects V-buffer barycentrics
 - Signed delta (zero-centered at gray)
 - Debug overview (3x3 grid containing all views above)
+- Dispatch tiles by effect ID (8x8 classifier coverage; mixed-ID tiles blend their effect colors)
 
 ![Debug overview showing the final composite, G-buffer targets, effects V-buffer channels, and signed effect delta](docs/GBuffer-VBuffer-Overview.png)
 
 *The **Debug overview** mode displays the final image and every deferred/V-buffer diagnostic in a single 3x3 grid.*
+
+![GPU-classified 8x8 indirect dispatch tiles colored by effect ID](docs/indirect_arg_tiles.png)
+
+*The **Dispatch tiles by effect ID** view shows the exact 8x8 regions appended to each effect's GPU tile list. Cyan represents iridescent wind, pale blue represents frost, and mixed-effect boundary tiles blend their colors.*
 
 ## Build
 
