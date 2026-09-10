@@ -717,7 +717,7 @@ void Renderer::DrawUi()
     ImGui_ImplDX12_NewFrame();
     ImGui_ImplWin32_NewFrame();
     ImGui::NewFrame();
-    ImGui::Begin("Animated Sail");
+    ImGui::Begin("Animated Flag");
     ImGui::Text("%.2f ms (%.1f FPS)", m_deltaTime * 1000.0f, m_deltaTime > 0 ? 1.0f / m_deltaTime : 0.0f);
     ImGui::Text("Deferred buffers: %u x %u", m_width, m_height);
     ImGui::SeparatorText("Wind and cloth");
@@ -738,8 +738,8 @@ void Renderer::DrawUi()
         "2 - Frost crystal",
         "3 - Storm lightning",
         "4 - Smiley warp distortion"};
-    ImGui::Combo("Left sail effect", &m_effectParameters.sailIds[0], effectIds, IM_ARRAYSIZE(effectIds));
-    ImGui::Combo("Right sail effect", &m_effectParameters.sailIds[1], effectIds, IM_ARRAYSIZE(effectIds));
+    ImGui::Combo("Left flag effect", &m_effectParameters.sailIds[0], effectIds, IM_ARRAYSIZE(effectIds));
+    ImGui::Combo("Right flag effect", &m_effectParameters.sailIds[1], effectIds, IM_ARRAYSIZE(effectIds));
     ImGui::SliderFloat3("Effect direction (view)", &m_effectParameters.direction.x, -1.0f, 1.0f);
     ImGui::SliderFloat("Signed strength", &m_effectParameters.signedStrength, -3.0f, 3.0f);
     ImGui::TextUnformatted("Warp reaches full replacement at |strength| = 1");

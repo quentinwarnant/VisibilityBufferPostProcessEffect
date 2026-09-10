@@ -1,13 +1,13 @@
-# VBuffer Animated Sail
+# VBuffer Animated Flag
 
 A DirectX 12 experiment that uses a compact visibility buffer to route deferred screen-space effects without putting effect logic in material shaders.
 
-![Two GPU-animated sails using different effects, with live ImGui controls](docs/animated-sails.png)
+![Two GPU-animated flags using different effects, with live ImGui controls](docs/animated-sails.png)
 
 ## Core technique
 
 1. **G-buffer rasterization**
-   - `SailVS` deforms two instanced sails entirely on the GPU.
+   - `SailVS` deforms two instanced flags entirely on the GPU.
    - The material pixel shader writes only base albedo, encoded view-space normal/material, depth, and effects V-buffer data.
 2. **Effect tile classification**
    - Compute shaders scan 8x8 screen tiles for each non-zero effect ID.
@@ -37,7 +37,7 @@ This supports both:
 | Depth | `R32_TYPELESS` | Depth testing and deferred sampling |
 | Signed delta | `R16G16B16A16_FLOAT` | Additive or replacement-equivalent effect output |
 
-Barycentrics are reconstructed from logical sail UV, primitive ID, and the known regular grid because the sample retains the `D3DCompile` shader model 5.1 path.
+Barycentrics are reconstructed from logical flag UV, primitive ID, and the known regular grid because the sample retains the `D3DCompile` shader model 5.1 path.
 
 ## Included effects
 
@@ -46,7 +46,7 @@ Barycentrics are reconstructed from logical sail UV, primitive ID, and the known
 - Storm-lightning veins
 - Smiley warp distortion
 
-Each sail selects its effect independently through ImGui. The panel also controls wind, gusts, billowing, tension, sag, effect direction, strength, and debug views.
+Each flag selects its effect independently through ImGui. The panel also controls wind, gusts, billowing, tension, sag, effect direction, strength, and debug views.
 
 ## Debug views
 

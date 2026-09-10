@@ -47,7 +47,7 @@ int WINAPI wWinMain(HINSTANCE instance, HINSTANCE, PWSTR, int show)
 
         RECT bounds{0, 0, 1440, 900};
         AdjustWindowRect(&bounds, WS_OVERLAPPEDWINDOW, FALSE);
-        HWND window = CreateWindowExW(0, className, L"DX12 Animated Sail - Deferred Effects",
+        HWND window = CreateWindowExW(0, className, L"DX12 Animated Flag - Deferred Effects",
             WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT,
             bounds.right - bounds.left, bounds.bottom - bounds.top,
             nullptr, nullptr, instance, nullptr);
