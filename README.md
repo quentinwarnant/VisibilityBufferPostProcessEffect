@@ -2,9 +2,7 @@
 
 A DirectX 12 experiment that uses a compact visibility buffer to route deferred screen-space effects without putting effect logic in material shaders.
 
-[![Watch the VBuffer Animated Flag demo on YouTube](https://img.youtube.com/vi/zfyyh94pEoo/maxresdefault.jpg)](https://youtu.be/zfyyh94pEoo)
-
-*Click the preview to watch the demo on YouTube.*
+https://github.com/user-attachments/assets/8b8872d0-2cd4-4009-8cfd-00f4d70bfbd6
 
 ## Core technique
 
