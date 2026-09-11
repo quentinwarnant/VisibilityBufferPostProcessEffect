@@ -4,9 +4,9 @@ A DirectX 12 experiment that uses a compact visibility buffer to route deferred 
 
 ![Two GPU-animated flags using different effects, with live ImGui controls](docs/animated-sails.png)
 
-<video src="docs/demo.mp4" controls title="VBuffer Animated Flag demo"></video>
+[![Watch the VBuffer Animated Flag demo on YouTube](https://img.youtube.com/vi/zfyyh94pEoo/maxresdefault.jpg)](https://youtu.be/zfyyh94pEoo)
 
-[Watch or download the demo video](docs/demo.mp4)
+*Click the preview to watch the demo on YouTube.*
 
 ## Core technique
 
