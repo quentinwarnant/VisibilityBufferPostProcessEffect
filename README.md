@@ -2,8 +2,6 @@
 
 A DirectX 12 experiment that uses a compact visibility buffer to route deferred screen-space effects without putting effect logic in material shaders.
 
-![Two GPU-animated flags using different effects, with live ImGui controls](docs/animated-sails.png)
-
 [![Watch the VBuffer Animated Flag demo on YouTube](https://img.youtube.com/vi/zfyyh94pEoo/maxresdefault.jpg)](https://youtu.be/zfyyh94pEoo)
 
 *Click the preview to watch the demo on YouTube.*
