@@ -69,7 +69,9 @@ The overview tiles are ordered left-to-right, top-to-bottom:
 - **Barycentrics** maps the three triangle coordinates to RGB.
 - **Signed delta** is centered at gray: brighter values are positive contributions and darker values are negative contributions.
 
+
 ![GPU-classified 8x8 indirect dispatch tiles colored by effect ID](docs/indirect_arg_tiles.png)
+A debug view of the classified tiles for indirect dispatching of effect shaders by ID
 
 ## Build
 
